@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Text, useTheme, Card, Button, ActivityIndicator } from 'react-native-paper';
+import { Text, useTheme, Card, Button, ActivityIndicator, Divider } from 'react-native-paper';
 import { AuthContext } from '../../contexto/AuthContext';
 import api from '../../services/Api';
 import { useFocusEffect } from '@react-navigation/native';
@@ -47,12 +47,19 @@ export default function PerfilScreen({ navigation }) {
     );
   }
 
+  const infoEscola = [
+    { label: 'Email', value: escola.email },
+    { label: 'Telefone', value: escola.telefone },
+    { label: 'INEP', value: escola.inep },
+    { label: 'CNPJ', value: escola.cnpj },
+  ];
+
   return (
     <ScrollView style={{ backgroundColor: theme.colors.background }}>
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
           <Text
-            variant="titleMedium"
+            variant="bodyLarge"
             style={{
               color: theme.colors.primary,
               textAlign: 'center',
@@ -62,28 +69,26 @@ export default function PerfilScreen({ navigation }) {
           >
             {escola.nome_escola || 'Nome da Escola'}
           </Text>
-
-          {[
-            { label: 'Email', value: escola.email },
-            { label: 'Telefone', value: escola.telefone },
-            { label: 'INEP', value: escola.inep },
-            { label: 'CNPJ', value: escola.cnpj },
-          ].map(({ label, value }) => (
-            <View key={label} style={styles.item}>
-              <Text variant="bodyMedium" style={{ color: theme.colors.primary, fontWeight: '700' }}>
-                {label}:
-              </Text>
-              <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-                {value || '-'}
-              </Text>
+          <Divider style={{ marginVertical: 8 }} />    
+          {infoEscola.map(({ label, value }, index) => (
+            <View key={label}>
+              <View style={styles.item}>
+                <Text variant="bodyMedium" style={{ color: theme.colors.primary, fontWeight: '700' }}>
+                  {label}:
+                </Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, paddingBottom: 1 }}>
+                  {value || '-'}
+                </Text>
+              </View>
+              {index < infoEscola.length - 1 && <Divider style={{ marginVertical: 8 }} />}
             </View>
           ))}
-
+          <Divider style={{ marginVertical: 12 }} />
           <View style={styles.botoes}>
             <Button
               mode="contained"
               onPress={() => navigation.navigate('EditarEscola', { escola })}
-              style={[styles.button, { backgroundColor: theme.colors.primary }]}
+              style={[styles.button, { backgroundColor: theme.colors.primary, borderRadius: 6 }]}
             >
               Editar Escola
             </Button>
@@ -91,7 +96,7 @@ export default function PerfilScreen({ navigation }) {
             <Button
               mode="outlined"
               onPress={() => navigation.navigate('EditarEndereco', { endereco: escola.endereco })}
-              style={[styles.button, { borderColor: theme.colors.primary, marginLeft: 8 }]}
+              style={[styles.button, { borderColor: theme.colors.primary, marginLeft: 8, borderRadius: 6 }]}
               textColor={theme.colors.primary}
             >
               Editar Endereço
@@ -106,7 +111,7 @@ export default function PerfilScreen({ navigation }) {
 const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   card: { margin: 16, padding: 16, borderRadius: 12 },
-  item: { marginBottom: 12 },
+  item: { marginBottom: 4 },
   botoes: { flexDirection: 'row', justifyContent: 'center', marginTop: 12 },
   button: { flex: 1 },
 });

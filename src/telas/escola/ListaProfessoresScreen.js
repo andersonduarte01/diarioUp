@@ -2,6 +2,7 @@ import React, { useState, useContext, useCallback } from 'react';
 import { ScrollView, View, Text, StyleSheet, ActivityIndicator, Alert, RefreshControl, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Card, Divider } from 'react-native-paper';
 import api from '../../services/Api';
 import { AuthContext } from '../../contexto/AuthContext';
 
@@ -28,7 +29,6 @@ export default function ListaProfessoresScreen({ navigation }) {
     setLoading(false);
   };
 
-  // Atualiza sempre que a tela ganhar foco
   useFocusEffect(
     useCallback(() => {
       carregarProfessores();
@@ -49,21 +49,30 @@ export default function ListaProfessoresScreen({ navigation }) {
       {loading ? (
         <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 16 }} />
       ) : (
-        professores.map((prof) => (
-          <View key={prof.id} style={styles.card}>
-            <Ionicons name="person-circle-outline" size={50} color="#007AFF" style={styles.icon} />
-            <View style={styles.info}>
-              <Text style={styles.profNome}>{prof.professor_nome}</Text>
-              <Text style={styles.profEmail}>{prof.email}</Text>
+        <Card style={styles.card}>
+          {professores.map((prof, index) => (
+            <View key={prof.id}>
+              <View style={styles.professorRow}>
+                <View style={styles.iconContainer}>
+                  <Ionicons name="person-circle-outline" size={50} color="#007AFF" />
+                </View>
+                <View style={styles.verticalDivider} />
+                <View style={styles.info}>
+                  <Text style={styles.profNome}>{prof.professor_nome}</Text>
+                  <Text style={styles.profEmail}>{prof.email}</Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => navigation.navigate('EditExcProfessorScreen', { professor: prof })} 
+                  style={styles.editButton}
+                >
+                  <Ionicons name="create-outline" size={24} color="#007AFF" />
+                </TouchableOpacity>
+              </View>
+
+              {index < professores.length - 1 && <Divider style={{ marginVertical: 8 }} />}
             </View>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('EditExcProfessorScreen', { professor: prof })} 
-              style={styles.editButton}
-            >
-              <Ionicons name="create-outline" size={24} color="#007AFF" />
-            </TouchableOpacity>
-          </View>
-        ))
+          ))}
+        </Card>
       )}
     </ScrollView>
   );
@@ -75,16 +84,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     elevation: 3,
-    marginBottom: 12,
   },
-  icon: {
-    marginRight: 12,
+  professorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  iconContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 60,
+  },
+  verticalDivider: {
+    width: 1,
+    backgroundColor: '#aaa',
+    marginHorizontal: 12,
+    alignSelf: 'stretch',
   },
   info: {
     flex: 1,

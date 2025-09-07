@@ -36,32 +36,32 @@ export default function EscolaStack() {
       <Stack.Screen 
         name="EditarEndereco" 
         component={EditarEnderecoScreen} 
-        options={{ title: 'Editar Endereço' }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="EditarSala" 
         component={EditarSalaScreen} 
-        options={{ title: 'Atualizar Sala' }} 
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="AlunosScreen" 
         component={AlunosScreen} 
-        options={{ title: 'Alunos' }} 
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="CadastrarAlunosScreen" 
         component={CadastrarAlunoScreen} 
-        options={{ title: 'Cadastrar Aluno' }} 
+        options={{ headerShown: false }} 
       />  
       <Stack.Screen 
         name="EditarExcluirAlunoScreen" 
         component={EditarExcluirAlunoScreen} 
-        options={{ title: 'Atualizar Aluno' }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="EditExcProfessorScreen" 
         component={EditExcProfessorScreen} 
-        options={{ title: 'Atualizar Professor' }} 
+        options={{ headerShown: false }}  
       />                    
     </Stack.Navigator>
   );

@@ -1,27 +1,28 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { ScrollView, View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import api from '../../services/Api';
-import { AuthContext } from '../../contexto/AuthContext';
-import { SuccessModal, ErrorModal } from '../../componentes/AppModal';
+import React, { useState, useEffect, useContext } from "react";
+import { ScrollView, View, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { Appbar, Card, TextInput, Button, useTheme } from "react-native-paper";
+import { Picker } from "@react-native-picker/picker";
+import api from "../../services/Api";
+import { AuthContext } from "../../contexto/AuthContext";
+import { SuccessModal, ErrorModal } from "../../componentes/AppModal";
 
 // Input de data com máscara
-function DataInput({ value, onChangeText, ...props }) {
-  const [text, setText] = useState(value || '');
+function DataInput({ value, onChangeText }) {
+  const [text, setText] = useState(value || "");
 
   useEffect(() => {
-    setText(value || '');
+    setText(value || "");
   }, [value]);
 
   const handleChange = (input) => {
-    let numericValue = input.replace(/\D/g, '');
+    let numericValue = input.replace(/\D/g, "");
     if (numericValue.length > 8) numericValue = numericValue.slice(0, 8);
 
-    let formatted = '';
+    let formatted = "";
     if (numericValue.length >= 2) {
-      formatted += numericValue.slice(0, 2) + '/';
+      formatted += numericValue.slice(0, 2) + "/";
       if (numericValue.length >= 4) {
-        formatted += numericValue.slice(2, 4) + '/';
+        formatted += numericValue.slice(2, 4) + "/";
         formatted += numericValue.slice(4, 8);
       } else {
         formatted += numericValue.slice(2);
@@ -36,54 +37,51 @@ function DataInput({ value, onChangeText, ...props }) {
 
   return (
     <TextInput
+      mode="outlined"
+      label="Data de Nascimento"
       value={text}
       onChangeText={handleChange}
-      placeholder="Dia/Mês/Ano"
       keyboardType="numeric"
       style={styles.input}
-      {...props}
+      placeholder="Dia/Mês/Ano"
     />
   );
 }
 
 export default function EditarExcluirAlunoScreen({ route, navigation }) {
+  const theme = useTheme();
   const { authTokens } = useContext(AuthContext);
   const { salaId, alunoId } = route.params;
 
-  const [nome, setNome] = useState('');
-  const [dataNascimento, setDataNascimento] = useState('');
-  const [sexo, setSexo] = useState('M');
-  const [loading, setLoading] = useState(false);
+  const [nome, setNome] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
+  const [sexo, setSexo] = useState("M");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [modalSucessoVisible, setModalSucessoVisible] = useState(false);
   const [modalErroVisible, setModalErroVisible] = useState(false);
 
   useEffect(() => {
     const fetchAluno = async () => {
-      setLoading(true);
       try {
-        const response = await api.get(`salas/alunos_api/alunos/${salaId}/${alunoId}/`, {
-          headers: { Authorization: `Bearer ${authTokens.access}` }
-        });
+        const response = await api.get(
+          `salas/alunos_api/alunos/${salaId}/${alunoId}/`,
+          { headers: { Authorization: `Bearer ${authTokens.access}` } }
+        );
         setNome(response.data.nome);
         setDataNascimento(response.data.data_nascimento);
         setSexo(response.data.sexo);
       } catch (error) {
-        Alert.alert('Erro', 'Não foi possível carregar os dados do aluno.');
+        setModalErroVisible(true);
       }
       setLoading(false);
     };
-
     fetchAluno();
   }, [alunoId]);
 
-  // Atualizar aluno
   const atualizarAluno = async () => {
-    if (!nome || !dataNascimento) {
-      Alert.alert('Erro', 'Informe o nome e a data de nascimento do aluno.');
-      return;
-    }
-
-    setLoading(true);
+    if (!nome || !dataNascimento) return;
+    setSaving(true);
     try {
       await api.put(
         `salas/alunos_api/alunos/${salaId}/${alunoId}/`,
@@ -94,77 +92,94 @@ export default function EditarExcluirAlunoScreen({ route, navigation }) {
     } catch (error) {
       setModalErroVisible(true);
     }
-    setLoading(false);
+    setSaving(false);
   };
 
-  // Excluir aluno
-  const excluirAluno = async () => {
+  const confirmarExcluir = () => {
     Alert.alert(
       "Confirmar Exclusão",
       "Tem certeza que deseja excluir este aluno?",
       [
         { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          style: "destructive",
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await api.delete(
-                `salas/alunos_api/alunos/${salaId}/${alunoId}/`,
-                { headers: { Authorization: `Bearer ${authTokens.access}` } }
-              );
-              navigation.goBack();
-            } catch (error) {
-              Alert.alert('Erro', 'Não foi possível excluir o aluno.');
-            }
-            setLoading(false);
-          }
-        }
+        { text: "Excluir", style: "destructive", onPress: excluirAluno }
       ]
     );
   };
 
+  const excluirAluno = async () => {
+    setSaving(true);
+    try {
+      await api.delete(
+        `salas/alunos_api/alunos/${salaId}/${alunoId}/`,
+        { headers: { Authorization: `Bearer ${authTokens.access}` } }
+      );
+      navigation.goBack();
+    } catch (error) {
+      setModalErroVisible(true);
+    }
+    setSaving(false);
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.label}>Nome</Text>
-        <TextInput
-          value={nome}
-          onChangeText={setNome}
-          placeholder="Nome do aluno"
-          style={styles.input}
+    <>
+      {/* AppHeader */}
+      <Appbar.Header style={{ backgroundColor: theme.colors.primary }}>
+        <Appbar.BackAction onPress={() => navigation.goBack()} color="#fff" />
+        <Appbar.Content
+          title="Editar Aluno"
+          titleStyle={{ color: "#fff" }}
         />
+      </Appbar.Header>
 
-        <Text style={styles.label}>Data de Nascimento</Text>
-        <DataInput value={dataNascimento} onChangeText={setDataNascimento} />
-
-        <Text style={styles.label}>Sexo</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={sexo}
-            onValueChange={(itemValue) => setSexo(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Masculino" value="M" />
-            <Picker.Item label="Feminino" value="F" />
-          </Picker>
-        </View>
-
+      <ScrollView contentContainerStyle={styles.container}>
         {loading ? (
-          <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 16 }} />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         ) : (
-          <>
-            <TouchableOpacity style={[styles.button, styles.successButton]} onPress={atualizarAluno}>
-              <Text style={styles.buttonText}>Salvar Alterações</Text>
-            </TouchableOpacity>
+          <Card style={styles.card}>
+            <TextInput
+              mode="outlined"
+              label="Nome"
+              value={nome}
+              onChangeText={setNome}
+              style={styles.input}
+            />
 
-            <TouchableOpacity style={[styles.button, styles.errorButton]} onPress={excluirAluno}>
-              <Text style={styles.buttonText}>Excluir Aluno</Text>
-            </TouchableOpacity>
-          </>
+            <DataInput value={dataNascimento} onChangeText={setDataNascimento} />
+
+            <Card style={styles.pickerCard}>
+              <Picker
+                selectedValue={sexo}
+                onValueChange={(itemValue) => setSexo(itemValue)}
+                style={{ height: 55, width: "100%" }}
+              >
+                <Picker.Item label="Masculino" value="M" />
+                <Picker.Item label="Feminino" value="F" />
+              </Picker>
+            </Card>
+
+            <View style={styles.buttonsContainer}>
+              <Button
+                mode="contained"
+                onPress={atualizarAluno}
+                loading={saving}
+                disabled={saving}
+                style={[styles.button, styles.buttonMarginRight, { borderRadius: 6 }]}
+              >
+                Salvar
+              </Button>
+              <Button
+                mode="contained"
+                onPress={confirmarExcluir}
+                loading={saving}
+                disabled={saving}
+                style={[styles.button, { backgroundColor: theme.colors.error, borderRadius: 6 }]}
+              >
+                Excluir
+              </Button>
+            </View>
+          </Card>
         )}
-      </View>
+      </ScrollView>
 
       <SuccessModal
         visible={modalSucessoVisible}
@@ -180,7 +195,7 @@ export default function EditarExcluirAlunoScreen({ route, navigation }) {
         message="Ocorreu um erro. Tente novamente."
         onClose={() => setModalErroVisible(false)}
       />
-    </ScrollView>
+    </>
   );
 }
 
@@ -188,42 +203,28 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
+    borderRadius: 12,
   },
-  label: { fontWeight: '600', marginBottom: 4 },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
     marginBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ccc',
+  pickerCard: {
     borderRadius: 8,
-    overflow: 'hidden',
     marginBottom: 16,
   },
-  picker: { height: 65, width: '100%' },
+  buttonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
   button: {
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
+    flex: 1,
   },
-  successButton: { backgroundColor: '#007AFF' },
-  errorButton: { backgroundColor: '#FF3B30' },
-  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  buttonMarginRight: {
+    marginRight: 8,
+  },
 });

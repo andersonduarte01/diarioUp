@@ -1,28 +1,27 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { ScrollView, View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import React, { useState, useContext } from 'react';
+import { ScrollView, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { Appbar, Card, TextInput, Button, useTheme, Portal, Modal, Text } from 'react-native-paper';
 import api from '../../services/Api';
 import { AuthContext } from '../../contexto/AuthContext';
 import { SuccessModal, ErrorModal } from '../../componentes/AppModal';
 
 export default function EditarProfessorScreen({ route, navigation }) {
+  const theme = useTheme();
   const { authTokens } = useContext(AuthContext);
-  const { professor } = route.params; // Recebe o professor da lista
+  const { professor } = route.params;
 
   const [nome, setNome] = useState(professor.professor_nome);
   const [email, setEmail] = useState(professor.email);
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [modalSucessoVisible, setModalSucessoVisible] = useState(false);
   const [modalErroVisible, setModalErroVisible] = useState(false);
+  const [modalExcluirVisible, setModalExcluirVisible] = useState(false);
 
   const salvarAlteracoes = async () => {
-    if (!nome || !email) {
-      Alert.alert('Erro', 'Preencha nome e email.');
-      return;
-    }
-
-    setLoading(true);
+    if (!nome || !email) return;
+    setSaving(true);
     try {
       await api.put(
         `professor/api/professores/${professor.id}/`,
@@ -31,95 +30,98 @@ export default function EditarProfessorScreen({ route, navigation }) {
       );
       setModalSucessoVisible(true);
     } catch (error) {
-      console.log('Erro ao atualizar professor:', error.response || error);
       setModalErroVisible(true);
     }
-    setLoading(false);
+    setSaving(false);
   };
 
   const excluirProfessor = async () => {
-    Alert.alert(
-      'Confirmar exclusão',
-      'Deseja realmente excluir este professor?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await api.delete(`professor/api/professores/${professor.id}/`, {
-                headers: { Authorization: `Bearer ${authTokens.access}` },
-              });
-              setLoading(false);
-              navigation.goBack();
-            } catch (error) {
-              console.log('Erro ao excluir professor:', error.response || error);
-              setModalErroVisible(true);
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
+    setModalExcluirVisible(false);
+    setSaving(true);
+    try {
+      await api.delete(`professor/api/professores/${professor.id}/`, {
+        headers: { Authorization: `Bearer ${authTokens.access}` },
+      });
+      navigation.goBack();
+    } catch (error) {
+      setModalErroVisible(true);
+    }
+    setSaving(false);
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Editar Professor</Text>
-
-        <Text style={styles.label}>Nome do Professor</Text>
-        <TextInput
-          value={nome}
-          onChangeText={setNome}
-          placeholder="Digite o nome"
-          style={styles.input}
+    <>
+      <Appbar.Header style={{ backgroundColor: theme.colors.primary }}>
+        <Appbar.BackAction onPress={() => navigation.goBack()} color="#fff" />
+        <Appbar.Content
+          title="Editar Professor"
+          titleStyle={{ color: '#fff', fontWeight: 'bold' }}
         />
+      </Appbar.Header>
 
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Digite o email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.input}
-        />
+      <ScrollView contentContainerStyle={styles.container}>
+        <Card style={styles.card}>
+          <TextInput
+            label="Nome do Professor"
+            mode="outlined"
+            value={nome}
+            onChangeText={setNome}
+            style={styles.input}
+          />
 
-        <Text style={styles.label}>Senha</Text>
-        <TextInput
-          value={senha}
-          onChangeText={setSenha}
-          placeholder="Digite nova senha"
-          secureTextEntry
-          style={styles.input}
-        />
+          <TextInput
+            label="Email"
+            mode="outlined"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={styles.input}
+          />
 
-        {loading ? (
-          <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 16 }} />
-        ) : (
-          <>
-            <TouchableOpacity style={styles.button} onPress={salvarAlteracoes}>
-              <Ionicons name="save-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-              <Text style={styles.buttonText}>Salvar</Text>
-            </TouchableOpacity>
+          <TextInput
+            label="Senha"
+            mode="outlined"
+            value={senha}
+            onChangeText={setSenha}
+            secureTextEntry
+            style={styles.input}
+          />
 
-            <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={excluirProfessor}>
-              <Ionicons name="trash-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-              <Text style={styles.buttonText}>Excluir</Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
+          {loading ? (
+            <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 16 }} />
+          ) : (
+            <View style={styles.buttonsContainer}>
+              <Button
+                mode="contained"
+                onPress={salvarAlteracoes}
+                loading={saving}
+                disabled={saving}
+                style={[styles.button, { borderRadius: 6 }]}
+              >
+                Salvar
+              </Button>
+
+              <Button
+                mode="contained"
+                onPress={() => setModalExcluirVisible(true)}
+                loading={saving}
+                disabled={saving}
+                style={[styles.button, { backgroundColor: theme.colors.error, borderRadius: 6 }]}
+              >
+                Excluir
+              </Button>
+            </View>
+          )}
+        </Card>
+      </ScrollView>
 
       <SuccessModal
         visible={modalSucessoVisible}
         message="Professor atualizado com sucesso!"
         onClose={() => {
-            setModalSucessoVisible(false);
-            navigation.goBack();
+          setModalSucessoVisible(false);
+          navigation.goBack();
         }}
       />
 
@@ -128,7 +130,33 @@ export default function EditarProfessorScreen({ route, navigation }) {
         message="Ocorreu um erro. Tente novamente."
         onClose={() => setModalErroVisible(false)}
       />
-    </ScrollView>
+
+      {/* Modal de confirmação de exclusão */}
+      <Portal>
+        <Modal
+          visible={modalExcluirVisible}
+          onDismiss={() => setModalExcluirVisible(false)}
+          contentContainerStyle={styles.modal}
+        >
+          <Text style={{ marginBottom: 16 }}>Tem certeza que deseja excluir este professor?</Text>
+          <Button
+            mode="contained"
+            buttonColor={theme.colors.error}
+            onPress={excluirProfessor}
+            style={{ marginBottom: 8, borderRadius: 6 }}
+          >
+            Sim, excluir
+          </Button>
+          <Button
+            mode="outlined"
+            onPress={() => setModalExcluirVisible(false)}
+            style={{ borderRadius: 6 }}
+          >
+            Cancelar
+          </Button>
+        </Modal>
+      </Portal>
+    </>
   );
 }
 
@@ -139,45 +167,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   card: {
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
-    elevation: 4,
-  },
-  cardTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 16,
-    textAlign: 'center',
-    color: '#007AFF',
-  },
-  label: {
-    fontWeight: '600',
-    marginBottom: 4,
-    marginTop: 12,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
+    marginBottom: 16,
     backgroundColor: '#fff',
   },
-  button: {
+  buttonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
-    borderRadius: 8,
+    justifyContent: 'space-between',
+    gap: 15
   },
-  deleteButton: {
-    backgroundColor: '#FF3B30',
+  button: {
+    flex: 1,
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
+  modal: {
+    backgroundColor: 'white',
+    padding: 20,
+    margin: 20,
+    borderRadius: 12,
   },
 });

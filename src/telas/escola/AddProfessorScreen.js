@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { ScrollView, View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { ScrollView, StyleSheet, Alert } from 'react-native';
+import { Card, TextInput, Button, Text, ActivityIndicator } from 'react-native-paper';
 import api from '../../services/Api';
 import { AuthContext } from '../../contexto/AuthContext';
 import { SuccessModal, ErrorModal } from '../../componentes/AppModal';
@@ -23,7 +23,8 @@ export default function CadastrarProfessorScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await api.post('professor/api/professores/',
+      await api.post(
+        'professor/api/professores/',
         { professor_nome: nome, email, password: senha },
         { headers: { Authorization: `Bearer ${authTokens.access}` } }
       );
@@ -40,52 +41,68 @@ export default function CadastrarProfessorScreen({ navigation }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Cadastrar Professor</Text>
+      <Card style={styles.card}>
+        <Card.Content>
+          <Text style={styles.cardTitle}>Cadastrar Professor</Text>
 
-        <Text style={styles.label}>Nome do Professor</Text>
-        <TextInput
-          value={nome}
-          onChangeText={setNome}
-          placeholder="Digite o nome"
-          style={styles.input}
-        />
+          <TextInput
+            label="Nome do Professor"
+            value={nome}
+            onChangeText={setNome}
+            mode="outlined"
+            style={styles.input}
+            contentStyle={{ paddingVertical: 4 }}
+            outlineColor="#d6d3d3"
+          />
 
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Digite o email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.input}
-        />
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            mode="outlined"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={styles.input}
+            contentStyle={{ paddingVertical: 4 }}
+            outlineColor="#d6d3d3"
+          />
 
-        <Text style={styles.label}>Senha</Text>
-        <TextInput
-          value={senha}
-          onChangeText={setSenha}
-          placeholder="Digite a senha"
-          secureTextEntry
-          style={styles.input}
-        />
+          <TextInput
+            label="Senha"
+            value={senha}
+            onChangeText={setSenha}
+            mode="outlined"
+            secureTextEntry
+            style={styles.input}
+            contentStyle={{ paddingVertical: 4 }}
+            outlineColor="#d6d3d3"
+          />
 
-        {loading ? (
-          <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 16 }} />
-        ) : (
-          <TouchableOpacity style={styles.button} onPress={salvarProfessor}>
-            <Ionicons name="person-add-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.buttonText}>Cadastrar</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          {loading ? (
+            <ActivityIndicator
+              animating={true}
+              color="#007AFF"
+              size="large"
+              style={{ marginTop: 16 }}
+            />
+          ) : (
+            <Button
+              mode="contained"
+              onPress={salvarProfessor}
+              style={styles.button}
+            >
+              Cadastrar
+            </Button>
+          )}
+        </Card.Content>
+      </Card>
 
       <SuccessModal
         visible={modalSucessoVisible}
         message="Professor cadastrado com sucesso!"
         onClose={() => {
           setModalSucessoVisible(false);
-          navigation.navigate('Professores'); 
+          navigation.navigate('Professores');
         }}
       />
 
@@ -105,42 +122,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   card: {
-    backgroundColor: '#fff',
-    padding: 16,
     borderRadius: 12,
+    padding: 1,
     elevation: 4,
   },
   cardTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     marginBottom: 16,
     textAlign: 'center',
     color: '#007AFF',
   },
-  label: {
-    fontWeight: '600',
-    marginBottom: 4,
-    marginTop: 12,
-  },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#fff',
+    marginTop: 8,
   },
   button: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
+    marginTop: 20,
     borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
+    backgroundColor: '#007AFF',
   },
 });

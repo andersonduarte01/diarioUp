@@ -10,7 +10,6 @@ import DashboardScreen from '../telas/escola/DashboardScreen';
 import NotificacoesScreen from '../telas/escola/NotificacoesScreen';
 import AddProfessorScreen from '../telas/escola/AddProfessorScreen';
 import PerfilScreen from '../telas/escola/PerfilScreen';
-import ConfiguracoesScreen from '../telas/escola/ConfiguracoesScreen';
 import AddSalaScreen from '../telas/escola/AddSalaScreen';
 import ListaProfessoresScreen from '../telas/escola/ListaProfessoresScreen';
 
@@ -75,7 +74,6 @@ export default function EscolaStack() {
     >
       <Drawer.Screen name="Dashboard" component={DashboardTabs} />
       <Drawer.Screen name="Perfil" component={PerfilScreen} />
-      <Drawer.Screen name="Configurações" component={ConfiguracoesScreen} />
       <Drawer.Screen name="Professores" component={ListaProfessoresScreen}/>
     </Drawer.Navigator>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import { View, Pressable, StyleSheet, Alert } from "react-native";
-import { Card, Text, Chip, useTheme } from "react-native-paper";
+import { View, Pressable, StyleSheet } from "react-native";
+import { Card, Text, useTheme, Divider } from "react-native-paper";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Animated, {
   useSharedValue,
@@ -9,7 +9,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
-export default function SalaCard({ sala, navigation }) {
+export default function SalaCardProf({ sala, navigation, index = 0 }) {
   const theme = useTheme();
 
   // animações
@@ -19,17 +19,15 @@ export default function SalaCard({ sala, navigation }) {
   const pressScale = useSharedValue(1);
 
   useEffect(() => {
-    cardOpacity.value = withTiming(1, { duration: 500 });
-    cardTranslateY.value = withTiming(0, { duration: 500 });
-    alunosScale.value = withSpring(1, { damping: 5, stiffness: 120 });
-  }, []);
+    const delay = index * 120;
+    cardOpacity.value = withTiming(1, { duration: 500, delay });
+    cardTranslateY.value = withTiming(0, { duration: 500, delay });
+    alunosScale.value = withSpring(1, { damping: 5, stiffness: 120, delay });
+  }, [index]);
 
   const animatedCardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.value,
-    transform: [
-      { translateY: cardTranslateY.value },
-      { scale: pressScale.value },
-    ],
+    transform: [{ translateY: cardTranslateY.value }, { scale: pressScale.value }],
   }));
 
   const animatedAlunosStyle = useAnimatedStyle(() => ({
@@ -43,88 +41,47 @@ export default function SalaCard({ sala, navigation }) {
     >
       <Animated.View style={[animatedCardStyle, styles.container]}>
         <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-          <Card.Content>
-            {/* Cabeçalho */}
-            <View style={styles.header}>
-              <View style={styles.headerLeft}>
-                <View
-                  style={[styles.iconCircle, { backgroundColor: theme.colors.primary }]}
-                >
-                  <Ionicons name="school-outline" size={20} color="#fff" />
-                </View>
-
-                <Text
-                  variant="titleMedium"
-                  style={[styles.title, { color: theme.colors.primary }]}
-                >
-                  {sala.descricao}
-                </Text>
+          <View style={styles.row}>
+            {/* Parte Azul (1/3) */}
+            <View style={[styles.left, { backgroundColor: theme.colors.primary }]}>
+              <View style={styles.iconContainer}>
+                <Ionicons name="school-outline" size={60} color="#fff" />
               </View>
-
-              <Chip
-                style={[styles.chip, { backgroundColor: "rgba(60, 144, 235, 0.15)" }]}
-                textStyle={[styles.chipText, { color: theme.colors.primary }]}
-              >
-                {sala.ano_descricao || "-"}
-              </Chip>
-            </View>
-
-            {/* Infos */}
-            <View style={styles.infos}>
-              {/* Turno */}
-              <View style={styles.infoRow}>
-                <Ionicons
-                  name="time-outline"
-                  size={24}
-                  color={theme.colors.primary}
-                  style={styles.icon}
-                />
-                <Text style={[styles.infoLabel, { color: theme.colors.onBackground }]}>
-                  Turno:
-                </Text>
-                <Text style={[styles.infoValue, { color: theme.colors.onBackground }]}>
-                  {sala.turno}
-                </Text>
-              </View>
-
-              {/* Total de alunos */}
-              <View style={styles.infoRow}>
-                <Ionicons
-                  name="people-outline"
-                  size={24}
-                  color={theme.colors.primary}
-                  style={styles.icon}
-                />
-                <Text style={[styles.infoLabel, { color: theme.colors.onBackground }]}>
-                  Total de alunos:
-                </Text>
-                <Animated.Text
-                  style={[styles.infoValue, { color: theme.colors.onBackground }, animatedAlunosStyle]}
-                >
-                  {sala.total_alunos}
+              <Divider style={styles.dividerLight} />
+              <View style={styles.alunosContainer}>
+                <Animated.Text style={[styles.alunosText, animatedAlunosStyle]}>
+                  {sala.total_alunos} alunos
                 </Animated.Text>
               </View>
             </View>
-          </Card.Content>
 
-          {/* Rodapé */}
-          <Card.Actions style={styles.footer}>
-            {/* Botão Editar */}
-            <Pressable
-              onPress={() => navigation.navigate('Detalhes', { sala })}
-              style={[styles.buttonEdit, { borderColor: theme.colors.primary }]}
-            >
-              <Text style={{ color: theme.colors.primary, fontSize: 12, fontWeight: "600" }}>
-                Detalhes
-              </Text>              
-              <Ionicons
-                name="arrow-forward-outline"
-                size={16}
-                color={theme.colors.primary}
-                style={{ marginLeft: 6}}
-              />
-            </Pressable>            
-          </Card.Actions>
+            {/* Conteúdo à direita */}
+            <View style={styles.right}>
+              <Text style={[styles.title, { color: theme.colors.primary }]}>
+                {sala.descricao}
+              </Text>
+              <Divider style={styles.dividerDark} />
+
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoText}>Ano: {sala.ano_descricao || "-"}</Text>
+                <Text style={styles.infoText}>Turno: {sala.turno}</Text>
+              </View>
+
+              <Divider style={styles.dividerDark} />
+              <View style={styles.footer}>
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate("Detalhes", { sala })
+                  }
+                  style={[styles.buttonDetalhes, { borderColor: theme.colors.primary }]}
+                >
+                  <Text style={{ color: theme.colors.primary, fontSize: 12, fontWeight: "600" }}>
+                    Detalhes
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
         </Card>
       </Animated.View>
     </Pressable>
@@ -132,34 +89,27 @@ export default function SalaCard({ sala, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { marginVertical: 10 },
-  card: { borderRadius: 20, elevation: 6 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerLeft: { flexDirection: "row", alignItems: "center" },
-  iconCircle: { width: 36, height: 36, borderRadius: 20, justifyContent: "center", alignItems: "center", marginRight: 8 },
-  title: { fontWeight: "bold", fontSize: 18 },
-  chip: { borderRadius: 12, paddingHorizontal: 6, paddingVertical: 2, marginTop: 10 },
-  chipText: { fontSize: 12, fontWeight: "600" },
-  infos: { marginTop: 14 },
-  infoRow: { flexDirection: "row", alignItems: "center", marginBottom: 6, marginLeft: 6 },
-  icon: { marginRight: 6 },
-  infoLabel: { fontWeight: "600" },
-  infoValue: { marginLeft: 6, fontWeight: "700" },
-  footer: { justifyContent: "flex-end", flexDirection: "row", gap: 8 },
-  buttonEdit: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginRight: 18
-  },
-  buttonAlunos: {
+  container: { marginVertical: 6, marginHorizontal: 10 },
+  card: { borderRadius: 12, overflow: "hidden", elevation: 6 },
+  row: { flexDirection: "row", minHeight: 120 },
+  left: { width: "33%", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 },
+  iconContainer: { flex: 2, justifyContent: "center" },
+  alunosContainer: { flex: 1, flexDirection: "row", alignItems: "center" },
+  alunosText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  right: { width: "67%", padding: 12, justifyContent: "space-between" },
+  title: { fontSize: 18, fontWeight: "700", marginBottom: 6, marginLeft: 20 },
+  dividerLight: { backgroundColor: "rgba(255,255,255,0.4)", width: "80%", height: 2, marginVertical: 2 },
+  dividerDark: { backgroundColor: "rgba(0,0,0,0.1)", height: 2, marginVertical: 6 },
+  infoContainer: { flexDirection: "column", gap: 4, marginLeft: 20 },
+  infoText: { fontSize: 14, color: "#007AFF", fontWeight: "600" },
+  footer: { flexDirection: "row", marginHorizontal: 15, marginTop: 10 },
+  buttonDetalhes: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
+    justifyContent: "center",
+    borderWidth: 1,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 4,
   },
 });

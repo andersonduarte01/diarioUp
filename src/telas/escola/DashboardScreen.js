@@ -42,12 +42,23 @@ export default function SalasScreen({ navigation }) {
   return (
     <ScrollView style={{ backgroundColor: theme.colors.background }}>
       {salas.length === 0 ? (
-        <Text style={{ textAlign: 'center', marginTop: 20, color: theme.colors.onBackground }}>
+        <Text
+          style={{
+            textAlign: "center",
+            marginTop: 20,
+            color: theme.colors.onBackground,
+          }}
+        >
           Nenhuma sala encontrada.
         </Text>
       ) : (
-        salas.map((sala) => (
-          <SalaCard key={sala.id} sala={sala} navigation={navigation} />
+        salas.map((sala, index) => (
+          <SalaCard
+            key={sala.id}
+            sala={sala}
+            navigation={navigation}
+            index={index} // 👈 aqui vai certinho
+          />
         ))
       )}
     </ScrollView>

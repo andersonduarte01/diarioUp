@@ -1,14 +1,12 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
-import { ActivityIndicator, View, Alert } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { useTheme as usePaperTheme } from 'react-native-paper';
 
 import { AuthContext } from '../contexto/AuthContext';
 
 import AuthStack from './AuthStack';
 import AdministratorStack from './AdministratorStack';
-import TecnicoStack from './TecnicoStack';
-import SolicitanteStack from './SolicitanteStack';
 import ProfessorStack from './ProfessorStack';
 import FuncionarioStack from './FuncionarioStack';
 import AlunoStack from './AlunoStack';
@@ -25,8 +23,6 @@ export default function Routes() {
       </View>
     );
   }
-
-  // Usar apenas tema claro do NavigationContainer
   const navTheme = DefaultTheme;
   console.log('USER NO ROUTES:', user);
   return (
@@ -35,10 +31,6 @@ export default function Routes() {
         <AuthStack />
       ) : user.is_administrator ? (
         <AdministratorStack />
-      ) : user.is_tecnico ? (
-        <TecnicoStack />
-      ) : user.is_solicitante ? (
-        <SolicitanteStack />
       ) : user.is_professor ? (
         <ProfessorStack />
       ) : user.is_funcionario ? (

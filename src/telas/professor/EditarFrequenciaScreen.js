@@ -1,27 +1,29 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
   View,
-  Text,
-  TouchableOpacity,
   FlatList,
   StyleSheet,
-  TextInput,
-  Modal,
-  Switch,
   ActivityIndicator,
+  Modal,
 } from "react-native";
+import {
+  Text,
+  Appbar,
+  Card,
+  Divider,
+  TextInput,
+  Button,
+  Switch,
+} from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { AuthContext } from "../../contexto/AuthContext";
 import api from "../../services/Api";
 import Icon from "react-native-vector-icons/Ionicons";
-import { SuccessModal, ErrorModal } from '../../componentes/AppModal';
+import { SuccessModal, ErrorModal } from "../../componentes/AppModal";
 
 const formatarData = (data) => {
   if (!data) return "";
-  const d = new Date(data);
-  const dia = String(d.getDate()).padStart(2, "0");
-  const mes = String(d.getMonth() + 1).padStart(2, "0"); // mês começa do 0
-  const ano = d.getFullYear();
+  const [ano, mes, dia] = data.split("-");
   return `${dia}/${mes}/${ano}`;
 };
 
@@ -46,8 +48,8 @@ export default function EditarFrequenciaScreen({ route }) {
           `frequencia/api_alunos/alunos-frequencia/${sala.id}/`,
           { headers: { Authorization: `Bearer ${authTokens.access}` } }
         );
-        const alunosData = Array.isArray(responseAlunos.data.results)
-          ? responseAlunos.data.results
+        const alunosData = Array.isArray(responseAlunos.data)
+          ? responseAlunos.data
           : [];
         setAlunos(alunosData);
 
@@ -57,8 +59,8 @@ export default function EditarFrequenciaScreen({ route }) {
         );
 
         const freqObj = {};
-        alunosData.forEach(aluno => {
-          const freq = responseFreq.data.find(f => f.aluno === aluno.id);
+        alunosData.forEach((aluno) => {
+          const freq = responseFreq.data.find((f) => f.aluno === aluno.id);
           freqObj[aluno.id] = freq
             ? { presente: freq.presente, observacao: freq.observacao || "" }
             : { presente: true, observacao: "" };
@@ -73,9 +75,9 @@ export default function EditarFrequenciaScreen({ route }) {
   }, [sala, dataSelecionada, authTokens]);
 
   const togglePresenca = (alunoId) => {
-    setFrequencias(prev => ({
+    setFrequencias((prev) => ({
       ...prev,
-      [alunoId]: { ...prev[alunoId], presente: !prev[alunoId].presente }
+      [alunoId]: { ...prev[alunoId], presente: !prev[alunoId].presente },
     }));
   };
 
@@ -87,9 +89,12 @@ export default function EditarFrequenciaScreen({ route }) {
 
   const fecharModalObservacao = () => {
     if (!alunoSelecionado) return;
-    setFrequencias(prev => ({
+    setFrequencias((prev) => ({
       ...prev,
-      [alunoSelecionado.id]: { ...prev[alunoSelecionado.id], observacao: observacaoTemp }
+      [alunoSelecionado.id]: {
+        ...prev[alunoSelecionado.id],
+        observacao: observacaoTemp,
+      },
     }));
     setModalVisible(false);
     setAlunoSelecionado(null);
@@ -101,18 +106,16 @@ export default function EditarFrequenciaScreen({ route }) {
       const payload = {
         sala_id: sala.id,
         data: dataSelecionada,
-        frequencias_alunos: Object.keys(frequencias).map(id => ({
+        frequencias_alunos: Object.keys(frequencias).map((id) => ({
           aluno: parseInt(id),
           presente: frequencias[id].presente,
           observacao: frequencias[id].observacao,
         })),
       };
 
-      await api.post(
-        "frequencia/api/frequencias/criar_bloco/",
-        payload,
-        { headers: { Authorization: `Bearer ${authTokens.access}` } }
-      );
+      await api.post("frequencia/api/frequencias/criar_bloco/", payload, {
+        headers: { Authorization: `Bearer ${authTokens.access}` },
+      });
 
       setModalSucessoVisible(true);
       if (onAtualizarCalendario) onAtualizarCalendario();
@@ -128,78 +131,89 @@ export default function EditarFrequenciaScreen({ route }) {
     return (
       <View>
         <View style={styles.alunoItem}>
-          <TouchableOpacity onPress={() => abrirModalObservacao(item)} style={{ marginRight: 12 }}>
-            <Icon name="create-outline" size={24} color="#1E88E5" />
-          </TouchableOpacity>
-
+          <Icon
+            name="create-outline"
+            size={24}
+            color="#1E88E5"
+            style={{ marginRight: 12 }}
+            onPress={() => abrirModalObservacao(item)}
+          />
+          <View style={styles.verticalDivider} />
           <View style={{ flex: 1 }}>
             <Text style={styles.alunoNome}>{item.nome}</Text>
-            {freq.observacao ? <Text style={styles.observacaoText}>{freq.observacao}</Text> : null}
+            {freq.observacao ? (
+              <Text style={styles.observacaoText}>{freq.observacao}</Text>
+            ) : null}
           </View>
 
           <Switch
             value={freq.presente}
             onValueChange={() => togglePresenca(item.id)}
-            trackColor={{ false: "#f28b82", true: "#bbdefb" }}
-            thumbColor={freq.presente ? "#1E88E5" : "#d32f2f"}
+            color="#1E88E5"
           />
         </View>
 
-        {index < alunos.length - 1 && <View style={styles.divider} />}
+        {index < alunos.length - 1 && <Divider />}
       </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          Editar Frequência - ({formatarData(dataSelecionada)})
-        </Text>
-      </View>
-
-      <View style={styles.alunosCard}>
-        <FlatList
-          data={alunos}
-          keyExtractor={item => item.id.toString()}
-          renderItem={renderAluno}
-          scrollEnabled={true}
+      <Appbar.Header style={{ backgroundColor: "#1E88E5" }}>
+        <Appbar.Action
+          icon={() => <Icon name="arrow-back" size={24} color="#fff" />}
+          onPress={() => navigation.goBack()}
         />
-      </View>
+        <Appbar.Content
+          title={`Editar Frequência - (${formatarData(dataSelecionada)})`}
+          titleStyle={{ color: "#fff" }}
+        />
+      </Appbar.Header>
 
-      <TouchableOpacity
-        style={[styles.saveButton, loading && { opacity: 0.6 }]}
-        onPress={salvarFrequencia}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.saveButtonText}>Salvar Alterações</Text>
-        )}
-      </TouchableOpacity>
+      <FlatList
+        data={alunos}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderAluno}
+        contentContainerStyle={{ padding: 12 }}
+        ListFooterComponent={
+          <Button
+            mode="contained"
+            onPress={salvarFrequencia}
+            style={styles.saveButton}
+            disabled={loading}
+            buttonColor="#1E88E5"
+          >
+            {loading ? <ActivityIndicator color="#fff" /> : "Salvar Alterações"}
+          </Button>
+        }
+      />
 
+      {/* Modal Observação */}
       <Modal transparent visible={modalVisible} animationType="slide">
         <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
+          <Card style={styles.modalContainer}>
             <Text style={styles.modalTitle}>
               Observação - {alunoSelecionado?.nome}
             </Text>
             <TextInput
+              mode="outlined"
               style={styles.modalInput}
               multiline
-              numberOfLines={4}
+              numberOfLines={6}
               value={observacaoTemp}
               onChangeText={setObservacaoTemp}
               placeholder="Digite a observação"
             />
-            <TouchableOpacity style={styles.modalButton} onPress={fecharModalObservacao}>
-              <Text style={styles.modalButtonText}>Fechar</Text>
-            </TouchableOpacity>
-          </View>
+            <Button
+              mode="contained"
+              style={{ marginTop: 12 }}
+              buttonColor="#1E88E5"
+              onPress={fecharModalObservacao}
+            >
+              Fechar
+            </Button>
+          </Card>
         </View>
       </Modal>
 
@@ -221,24 +235,41 @@ export default function EditarFrequenciaScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", backgroundColor: "#1E88E5", padding: 16 },
-  backButton: { marginRight: 12 },
-  headerTitle: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
 
-  alunosCard: { backgroundColor: "#fff", padding: 12, margin: 12, borderRadius: 12, elevation: 2 },
-  alunoItem: { flexDirection: "row", alignItems: "center", paddingVertical: 8 },
-  divider: { height: 1, backgroundColor: "#ddd", marginVertical: 4 },
+  alunoItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
   alunoNome: { fontSize: 16, fontWeight: "bold", color: "#333" },
   observacaoText: { color: "#666", fontSize: 14, marginTop: 4 },
 
-  saveButton: { backgroundColor: "#1E88E5", padding: 16, borderRadius: 12, alignItems: "center", margin: 12 },
-  saveButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-
-  modalBackground: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
-  modalContainer: { width: "85%", backgroundColor: "#fff", borderRadius: 12, padding: 16 },
+  saveButton: {
+    marginTop: 16,
+    marginBottom: 40,
+    padding: 6,
+    borderRadius: 12,
+  },
+  verticalDivider: {
+    width: 1,
+    backgroundColor: "#aaa",
+    marginHorizontal: 12,
+    alignSelf: "stretch",
+    marginRight: 20,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContainer: {
+    width: "85%",
+    padding: 16,
+    borderRadius: 12,
+  },
   modalTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 12 },
-  modalInput: { borderWidth: 1, borderColor: "#ddd", borderRadius: 8, padding: 8, textAlignVertical: "top", marginBottom: 12 },
-  modalButton: { backgroundColor: "#1E88E5", padding: 12, borderRadius: 8, alignItems: "center" },
-  modalButtonText: { color: "#fff", fontWeight: "bold" },
+  modalInput: { minHeight: 140, textAlignVertical: "top" },
 });

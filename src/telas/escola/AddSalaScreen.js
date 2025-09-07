@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { ScrollView, View, ActivityIndicator, Alert, StyleSheet } from "react-native";
-import { TextInput, Button, Text, useTheme, Card, Title } from "react-native-paper";
+import { TextInput, Button, Text, useTheme, Card } from "react-native-paper";
 import { Picker } from '@react-native-picker/picker';
 import api from "../../services/Api";
 import { AuthContext } from "../../contexto/AuthContext";
@@ -57,7 +57,6 @@ export default function CadastrarSalaScreen({ navigation }) {
     }
   };
 
-
   if (loading) {
     return (
       <View style={[styles.loading, { backgroundColor: theme.colors.background }]}>
@@ -67,16 +66,21 @@ export default function CadastrarSalaScreen({ navigation }) {
   }
 
   return (
-    <ScrollView style={styles.container(theme)}>
+    <ScrollView contentContainerStyle={styles.container(theme)}>
       <Card style={styles.card}>
         <Card.Content>
-          <Title style={styles.title}>Cadastrar Sala</Title>
+          <Text style={styles.title}>Cadastrar Sala</Text>
 
           <TextInput
             label="Descrição"
             value={descricao}
             onChangeText={setDescricao}
+            mode="outlined"
             style={styles.input}
+            outlineColor="#ccc"
+            activeOutlineColor={theme.colors.primary}
+            placeholder="Digite a descrição"
+            placeholderTextColor="#999"
           />
 
           <Text style={styles.label}>Turno</Text>
@@ -101,11 +105,10 @@ export default function CadastrarSalaScreen({ navigation }) {
 
           <Button
             mode="contained"
-            icon="content-save-outline"
             onPress={handleCadastrar}
             style={styles.button}
           >
-            Cadastrar Sala
+            Cadastrar
           </Button>
         </Card.Content>
       </Card>
@@ -130,7 +133,7 @@ export default function CadastrarSalaScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: (theme) => ({
-    flex: 1,
+    flexGrow: 1,
     padding: 16,
     backgroundColor: theme.colors.background,
   }),
@@ -140,7 +143,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   card: {
-    padding: 8,
+    padding: 12,
     borderRadius: 12,
     elevation: 4,
   },
@@ -148,10 +151,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: "center",
     fontWeight: "700",
-    color: "#0D6EFD"
+    fontSize: 22,
+    color: "#007AFF",
   },
   input: {
     marginBottom: 16,
+    height: 40,
   },
   pickerContainer: {
     borderWidth: 1,
@@ -165,6 +170,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   button: {
-    marginTop: 8,
+    marginTop: 20,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
   },
 });

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { ScrollView, StyleSheet, View, ActivityIndicator, Alert } from "react-native";
-import { TextInput, Button, Text, useTheme, Portal, Modal, Card } from "react-native-paper";
+import { TextInput, Button, Text, useTheme, Portal, Modal, Card, Appbar } from "react-native-paper";
 import { Picker } from '@react-native-picker/picker';
 import api from "../../services/Api";
 import { AuthContext } from "../../contexto/AuthContext";
@@ -85,7 +85,7 @@ export default function EditarSalaScreen({ route, navigation }) {
         "Sala excluída com sucesso. Você será redirecionado.",
         [
           {
-            text: "Voltar",
+            text: "OK",
             onPress: () => navigation.goBack(),
           },
         ],
@@ -110,94 +110,106 @@ export default function EditarSalaScreen({ route, navigation }) {
   }
 
   return (
-    <ScrollView style={{ flex: 1, padding: 16, backgroundColor: theme.colors.background }}>
-      <Card style={styles.card}>
-        <Card.Content>
-          <TextInput
-            label="Sala"
-            value={descricao}
-            onChangeText={setDescricao}
-            style={styles.input}
-            mode="outlined"
-          />
+    <>
+      <Appbar.Header style={{ backgroundColor: theme.colors.primary }}>
+        <Appbar.BackAction onPress={() => navigation.goBack()} color="#fff" />
+        <Appbar.Content
+          title="Editar Sala"
+          titleStyle={{ color: "#fff" }}
+        />
+      </Appbar.Header>    
+      <ScrollView style={{ flex: 1, padding: 16, backgroundColor: theme.colors.background }}>
+        <Card style={styles.card}>
+          <Card.Content>
+            <TextInput
+              label="Sala"
+              value={descricao}
+              onChangeText={setDescricao}
+              style={styles.input}
+              mode="outlined"
+            />
 
-          <Text style={styles.label}>Turno</Text>
-          <View style={styles.pickerContainer1}>
-            <Picker selectedValue={turno} onValueChange={setTurno}>
-              {turnos.map((t) => (
-                <Picker.Item key={t.value} label={t.label} value={t.value} />
-              ))}
-            </Picker>
-          </View>
+            <Text style={styles.label}>Turno</Text>
+            <View style={styles.pickerContainer1}>
+              <Picker selectedValue={turno} onValueChange={setTurno}>
+                {turnos.map((t) => (
+                  <Picker.Item key={t.value} label={t.label} value={t.value} />
+                ))}
+              </Picker>
+            </View>
 
-          <Text style={styles.label}>Ano</Text>
-          <View style={styles.pickerContainer}>
-            <Picker selectedValue={ano} onValueChange={setAno}>
-              {anosDisponiveis.map((a) => (
-                <Picker.Item key={a.id} label={a.descricao} value={a.id} />
-              ))}
-            </Picker>
-          </View>
+            <Text style={styles.label}>Ano</Text>
+            <View style={styles.pickerContainer}>
+              <Picker selectedValue={ano} onValueChange={setAno}>
+                {anosDisponiveis.map((a) => (
+                  <Picker.Item key={a.id} label={a.descricao} value={a.id} />
+                ))}
+              </Picker>
+            </View>
 
-          <View style={styles.botoes}>
+            <View style={styles.botoes}>
+              <Button
+                mode="contained"
+                onPress={handleUpdate}
+                style={{ flex: 1, borderColor: theme.colors.error, borderRadius: 6 }}
+
+              >
+                Salvar
+              </Button>
+
+              <Button
+                mode="outlined"
+                onPress={() => setModalVisible(true)}
+                style={{ flex: 1, borderColor: theme.colors.error, borderRadius: 6 }}
+                textColor={theme.colors.error}
+              >
+                Excluir Sala
+              </Button>
+            </View>
+          </Card.Content>
+        </Card>
+
+        <Portal>
+          <Modal
+            visible={modalVisible}
+            onDismiss={() => setModalVisible(false)}
+            contentContainerStyle={styles.modal}
+          >
+            <Text style={{ marginBottom: 16 }}>Tem certeza que deseja excluir esta sala?</Text>
             <Button
               mode="contained"
-              onPress={handleUpdate}
-              style={{ marginTop: 8 }}
-              icon="content-save"
+              buttonColor={theme.colors.error}
+              onPress={handleDelete}
+              style={{ marginBottom: 8, borderRadius: 6 }}
             >
-              Salvar Alterações
+              Sim, excluir
             </Button>
-
-            <Button
-              mode="outlined"
-              onPress={() => setModalVisible(true)}
-              style={{ marginTop: 8, borderColor: theme.colors.error }}
-              textColor={theme.colors.error}
-              icon="delete-outline"
+            <Button 
+              mode="outlined" 
+              onPress={() => setModalVisible(false)}
+              style={{ marginBottom: 8, borderRadius: 6 }}
             >
-              Excluir Sala
+              Cancelar
             </Button>
-          </View>
-        </Card.Content>
-      </Card>
+          </Modal>
+        </Portal>
 
-      <Portal>
-        <Modal
-          visible={modalVisible}
-          onDismiss={() => setModalVisible(false)}
-          contentContainerStyle={styles.modal}
-        >
-          <Text style={{ marginBottom: 16 }}>Tem certeza que deseja excluir esta sala?</Text>
-          <Button
-            mode="contained"
-            buttonColor={theme.colors.error}
-            onPress={handleDelete}
-            style={{ marginBottom: 8 }}
-          >
-            Sim, excluir
-          </Button>
-          <Button mode="outlined" onPress={() => setModalVisible(false)}>
-            Cancelar
-          </Button>
-        </Modal>
-      </Portal>
+        <SuccessModal
+          visible={modalSucessoVisible}
+          message="Sala atualizada com sucesso!"
+          onClose={() => {
+            setModalSucessoVisible(false);
+            navigation.goBack();
+          }}
+        />
 
-      <SuccessModal
-        visible={modalSucessoVisible}
-        message="Sala atualizada com sucesso!"
-        onClose={() => {
-          setModalSucessoVisible(false);
-          navigation.goBack();
-        }}
-      />
-
-      <ErrorModal
-        visible={modalErroVisible}
-        message="Ocorreu um erro. Tente novamente."
-        onClose={() => setModalErroVisible(false)}
-      />
-    </ScrollView>
+        <ErrorModal
+          visible={modalErroVisible}
+          message="Ocorreu um erro. Tente novamente."
+          onClose={() => setModalErroVisible(false)}
+        />
+      </ScrollView>
+    </>
   );
 }
 
@@ -234,8 +246,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   botoes: {
+    flex: 1,
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     gap: 10,
   },
 });

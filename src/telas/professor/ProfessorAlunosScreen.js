@@ -1,10 +1,10 @@
 import React, { useState, useContext, useCallback } from 'react';
-import { ScrollView, View, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
-import { Text, Card, useTheme, Appbar } from 'react-native-paper';
+import { ScrollView, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { Text, Card, Appbar, useTheme, IconButton, Button } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import api from '../../services/Api';
 import { AuthContext } from '../../contexto/AuthContext';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function AlunosScreen({ route, navigation }) {
   const theme = useTheme();
@@ -17,20 +17,30 @@ export default function AlunosScreen({ route, navigation }) {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+
       const fetchAlunos = async () => {
         setLoading(true);
         try {
-          const response = await api.get(`salas/alunos_api/alunos/${salaId}/`, {
-            headers: { Authorization: `Bearer ${authTokens.access}` },
-          });
-          if (isActive)
-            setAlunos(Array.isArray(response.data.results) ? response.data.results : []);
+          let results = [];
+          let url = `salas/alunos_api/alunos/${salaId}/`;
+
+          // Loop para pegar todas as páginas
+          while (url) {
+            const response = await api.get(url, {
+              headers: { Authorization: `Bearer ${authTokens.access}` },
+            });
+            results = [...results, ...response.data.results];
+            url = response.data.next; // próxima página ou null
+          }
+
+          if (isActive) setAlunos(results);
         } catch (error) {
           console.log('Erro ao buscar alunos:', error);
           if (isActive) setAlunos([]);
         }
         if (isActive) setLoading(false);
       };
+
       fetchAlunos();
       return () => { isActive = false; };
     }, [authTokens, salaId])
@@ -46,94 +56,71 @@ export default function AlunosScreen({ route, navigation }) {
 
   return (
     <>
-      {/* Header azul com texto branco e botão de voltar */}
-      <Appbar.Header style={{ backgroundColor: "#1E88E5" }} elevated>
+      <Appbar.Header style={{ backgroundColor: '#0D6EFD' }}>
         <Appbar.BackAction color="#fff" onPress={() => navigation.goBack()} />
-        <Appbar.Content title={salaDescricao} titleStyle={{ color: "#fff" }} />
+        <Appbar.Content title={salaDescricao} titleStyle={{ color: '#fff' }} />
       </Appbar.Header>
 
       <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        {/* Lista de Alunos */}
-        {alunos.length === 0 ? (
-          <Text style={[styles.emptyText, { color: theme.colors.onBackground }]}>
-            Nenhum aluno cadastrado nesta sala.
-          </Text>
-        ) : (
-          alunos.map((aluno, index) => (
-            <AlunoCard
-              key={aluno.id}
-              aluno={aluno}
-              theme={theme}
-              navigation={navigation}
-              numero={index + 1}
-              salaId={salaId}
-            />
-          ))
-        )}
+        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <Card.Content>
+            {/* Cabeçalho da tabela */}
+            <View style={[styles.tabelaLinha, styles.tabelaCabecalho]}>
+              <Text style={styles.celulaNumero}>#</Text>
+              <Text style={styles.celulaNome}>Nome</Text>
+              <Text style={styles.celulaInfo}>Nasc / Sexo</Text>
+            </View>
+
+            {/* Lista de alunos */}
+            {alunos.length === 0 ? (
+              <Text style={[styles.emptyText, { color: theme.colors.onBackground }]}>
+                Nenhum aluno cadastrado nesta sala.
+              </Text>
+            ) : (
+              alunos.map((aluno, index) => (
+                <View key={aluno.id} style={styles.tabelaLinha}>
+                  <Text style={styles.celulaNumero}>{index + 1}</Text>
+                  <Text style={styles.celulaNome1}>{aluno.nome}</Text>
+                  <View style={styles.celulaInfo}>
+                    <Text style={styles.celulaInfo1}>{aluno.data_nascimento || '-'}</Text>
+                    <Text style={styles.celulaInfo1}>
+                      {aluno.sexo === 'F' ? 'Feminino' : aluno.sexo === 'M' ? 'Masculino' : '-'}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            )}
+          </Card.Content>
+        </Card>
       </ScrollView>
     </>
   );
 }
 
-function AlunoCard({ aluno, theme, numero }) {
-  return (
-    <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-      <Card.Content>
-        <View style={styles.alunoHeader}>
-          {/* Número do aluno */}
-          <View style={styles.numeroContainer}>
-            <Text style={styles.numeroTexto}>{numero}</Text>
-          </View>
-
-          {/* Nome do aluno */}
-          <Text style={[styles.nome, { color: theme.colors.onBackground }]}>
-            {aluno.nome}
-          </Text>
-        </View>
-
-        {/* Informações do aluno */}
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Data de Nascimento: </Text>
-          <Text style={styles.value}>{aluno.data_nascimento || '-'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Sexo: </Text>
-          <Text style={styles.value}>
-            {aluno.sexo === 'F' ? 'Feminino' : aluno.sexo === 'M' ? 'Masculino' : '-'}
-          </Text>
-        </View>
-      </Card.Content>
-    </Card>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, padding: 16 },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  salaCard: { borderRadius: 12, elevation: 4, marginBottom: 16, padding: 8 },
-  salaTitulo: { fontSize: 24, fontWeight: '700', textAlign: 'center' },
-  emptyText: { textAlign: 'center', marginTop: 20, fontSize: 16 },
-  card: { borderRadius: 12, elevation: 4, marginBottom: 2, padding: 8, marginTop: 5 },
-  alunoHeader: {
+  card: { borderRadius: 12, elevation: 4, paddingVertical: 8 },
+
+  tabelaLinha: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    paddingVertical: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#ccc',
   },
-  numeroContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#3C90EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
+  tabelaCabecalho: {
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#007AFF',
+    marginBottom: 4,
   },
-  numeroTexto: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  nome: { fontWeight: '700', fontSize: 18, flex: 1 },
-  infoRow: { flexDirection: 'row', marginLeft: 35, marginBottom: 4 },
-  label: { fontWeight: '700', color: '#555' },
-  value: { fontWeight: '500', color: '#000' },
+
+  celulaNumero: { width: 30, fontWeight: '700', textAlign: 'center', color: '#007aff' },
+  celulaNome: { flex: 2, fontWeight: '700', paddingLeft: 6, color: '#007Aff' },
+  celulaNome1: { flex: 2, fontWeight: '500', paddingLeft: 6 },
+  celulaInfo: { flex: 1.2, fontSize: 14, fontWeight: '700', color: '#007Aff', flexDirection: 'column' },
+  celulaInfo1: { paddingLeft: 5, fontSize: 13 },
+
+  emptyText: { textAlign: 'center', marginTop: 12, fontSize: 16 },
+  cardActions: { marginTop: 8, paddingHorizontal: 16, paddingBottom: 12 },
 });
