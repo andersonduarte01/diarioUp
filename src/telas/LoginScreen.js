@@ -1,68 +1,95 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text, ActivityIndicator, useTheme } from 'react-native-paper';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { AuthContext } from '../contexto/AuthContext';
+import { AuthContext } from '../../src/contexto/AuthContext';
 
 const LoginScreen = () => {
   const { login, loading, user } = useContext(AuthContext);
   const navigation = useNavigation();
-  const theme = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (user) {
-      navigation.replace('Home'); // substitua 'Home' pela stack apropriada
+      navigation.replace('Home');
     }
   }, [user]);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert('Preencha email e senha');
+      Alert.alert('Atenção', 'Preencha email e senha');
       return;
     }
 
     const success = await login(email, password);
     if (!success) {
-      alert('Email ou senha inválidos');
+      Alert.alert('Erro', 'Email ou senha inválidos');
     }
   };
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      style={{ flex: 1, backgroundColor: '#E3F9FF' }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={[styles.title, { color: theme.colors.primary }]}>Login</Text>
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Card principal */}
+        <View style={styles.card}>
+          {/* Avatar circular sobre o card */}
+          <View style={styles.avatarContainer}>
+            <Image
+              source={require('../../imagens/monitor.png')}
+              style={styles.avatar}
+              resizeMode="cover"
+            />
+          </View>
 
-      <TextInput
-        label="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        style={styles.input}
-        mode="outlined"
-      />
+          {/* Título */}
+          <Text style={styles.title}>Bem-vindo!</Text>
 
-      <TextInput
-        label="Senha"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-        mode="outlined"
-      />
+          {/* Inputs */}
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+            placeholderTextColor="#777"
+          />
 
-      {loading ? (
-        <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 20 }} />
-      ) : (
-        <Button mode="contained" onPress={handleLogin} style={styles.button}>
-          Entrar
-        </Button>
-      )}
+          <TextInput
+            style={styles.input}
+            placeholder="Senha"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            placeholderTextColor="#777"
+          />
+
+          {/* Botão */}
+          {loading ? (
+            <ActivityIndicator size="large" color="#0D47A1" style={{ marginTop: 20 }} />
+          ) : (
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Entrar</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -71,20 +98,83 @@ export default LoginScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#2885d1ff',
+  },
+  card: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingTop: 120, // espaço para avatar
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+    position: 'relative',
+  },
+  avatarContainer: {
+    width: 210,
+    height: 210,
+    borderRadius: 140,
+    backgroundColor: '#fff',
+    borderWidth: 3,
+    borderColor: '#0D47A1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top: -100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  avatar: {
+    width: 220,
+    height: 220,
+    borderRadius: 65,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#0D47A1',
     textAlign: 'center',
     marginBottom: 30,
   },
   input: {
-    marginBottom: 20,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 16,
+    backgroundColor: '#fff',
   },
   button: {
+    width: '100%',
+    backgroundColor: '#0D47A1',
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
     marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: 'bold',
   },
 });
